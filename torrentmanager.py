@@ -14,6 +14,18 @@ def getUrlList():
             links.append(a["href"])
     return links
 
+def getServer(linklist):
+    max = len(linklist)
+    while True:
+        try:
+            link = int(input(f"which server? (1 min, {max} max) ")
+        except TypeError:
+            print("must be a number")
+        if link>max or link<1:
+            print("invalid")
+        else:
+            return link
+    
 
 def howManyOptions():
     while True:
@@ -113,7 +125,7 @@ def getMagnetLink():
 
 alllinks = getUrlList()
 
-finallink=alllinks[0]
+finallink = getServer(alllinks)
 
 movie = input("search for a movie: ")
 
@@ -128,5 +140,6 @@ getData(numresults)
 printData()
 
 whichlink = getMagnetLink()
+
 
 print(f"your link: {data[whichlink-1][3]}") 
