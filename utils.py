@@ -92,11 +92,11 @@ def getData(numresults, movielink):
             
             iteration += 1
             if iteration == numresults:             #stop once enough links have been collected
-                return
+                return data
             data.append([])                         #make sure theres room in the array to append to
     
     data.pop(len(data)-1)                           #removes empty list at end of data 
-    return
+    return data
 
 def printData():
     iteration = 1
@@ -112,7 +112,11 @@ def printData():
 def getMagnetLink():
     while True:
         try:
-            whichlink = int(input("which to download? "))
+            whichlink = (input("which to download? ('none' to skip) "))
+            if whichlink == "none":
+                return "none"
+            else:
+                whichlink = int(whichlink)
         except ValueError:
             print("must be a number")
             continue
@@ -120,3 +124,12 @@ def getMagnetLink():
             print("invalid")
         else:
             return whichlink
+        
+
+def inputHandler():
+    while True:
+        response = input("return to search for another movie, 'exit' to finalize and print out list")
+        if response == "":
+            return "again"
+        elif response =="exit":
+            return "exit"
