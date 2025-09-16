@@ -1,70 +1,62 @@
-from utils import getUrlList, getServer, howManyOptions, shortenlink, getData, printData, getMagnetLink, inputHandler
+from utils import getUrlList, getServer, howManyOptionsToDisplay, getData, printData, getMovieInfo, saveFinalData, printFinalData
 
 
 def main():
     alllinks = getUrlList()
-
     finallink = getServer(alllinks)
 
-    print(finallink)
+    print(f"searching on server: {finallink}")
 
-    linklist=[[]]
-    justlinks=[]
-    iteration = 0
+    moviedata = [[]]
+    movielinks = []
+    position = 0
     while True:
-        todo = inputHandler() 
-        if todo=="":
-            pass
-        if todo=="exit":
+        movie = input("search for a movie (or type 'exit' if finished): ")
+        
+        if movie=='exit':
             break
 
-        movie = input("search for a movie: ")
+        movielink = finallink + f"/search/{movie}/1/99/0"                       #print(f"searching on: {movielink}")
+        numsearchresults = 4                                                    #howManyOptionsToDisplay()
 
-        movielink = finallink + f"/search/{movie}/1/99/0"
+        data = getData(numsearchresults, movielink)
+        printData(data)
 
-        print(f"searching on: {movielink}")
-
-        numresults = 4           #howManyOptions()
-
-        data = getData(numresults, movielink)
-
-        printData()
-
-        whichlink = getMagnetLink()
-        if whichlink=="none":
+        selectedlinkindex = getMovieInfo(data)
+        if selectedlinkindex=="none":
             pass
         else:
-            linklist.append([])
-            linklist[iteration].append(movie)     #title, could use data[whichlink-1][0]
-            linklist[iteration].append(data[whichlink-1][1])
-            linklist[iteration].append(data[whichlink-1][3])
-            justlinks.append(data[whichlink-1][3])
-
-            iteration+=1
+            moviedata.append([])
+            moviedata[position].append(movie)                                   #title, could use data[selectedlinkindex-1][0] 
+            moviedata[position].append(data[selectedlinkindex-1][1])            #for actual name, this uses user's search as name
+            moviedata[position].append(data[selectedlinkindex-1][3])
+            movielinks.append(data[selectedlinkindex-1][3])
+            position+=1
             print(f"added to list")
 
+
+
+
     i = 0
-    for element in linklist:
+    for element in moviedata:                                                   #cleanup moviedata
         if not element:
-            linklist.pop(i)
+            moviedata.pop(i)
         i+=1
-    print(linklist)
 
-
-    with open("results.txt", "a") as file:
-        i=1
-        for movie in linklist:
-            file.write(f"{i}: {movie[0]}, ")
-            file.write(f"{movie[1]}, ")
-            file.write(f"{movie[2]}\n")
-            i+=1
-        print(f"links:\n")
-        for link in justlinks:
-            file.write(f"{link}\n")
-        file.close()
+    #print(moviedata)
+    #print(movielinks)
     
-    print("responses saved to results.txt")
 
+    saveorno = input("save results? (y/n) ")
+    if saveorno=="y":
+        saveFinalData(moviedata, movielinks, "results.txt")
+        print("responses saved to results.txt")
+    else:
+        printFinalData(moviedata, movielinks)
+        print("exiting")
+
+    for link in movielinks:
+        print(len(link))
 
 if __name__ == "__main__":
     main()

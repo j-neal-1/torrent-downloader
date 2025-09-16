@@ -1,33 +1,32 @@
-import os
-from time import sleep
+#import os
+#from time import sleep
 from bs4 import BeautifulSoup
 import requests 
 
 
-def getUrlList():
-    links = []
+def getUrlList() -> list:                           #good. returns list of active thepiratebay mirrors
+    linklist = []
     url = "https://piratebayproxy.info/"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     for tr in soup.find_all("tr"):
         for a in tr.find_all("a", href=True):
-            links.append(a["href"])
-    return links
+            linklist.append(a["href"])
+    return linklist
 
-def getServer(linklist):
-    max = len(linklist)
+def getServer(linklist: list) -> str:                #good. gets user input for what thepiratebay mirror (url) to use moving forward
     while True:
         try:
-            linkindex = int(input(f"which server? (1 min, {max} max) "))
+            linkindex = int(input(f"which server? (1 min, {len(linklist)} max) "))
         except TypeError:
             print("must be a number")
         if linkindex>max or linkindex<1:
             print("invalid")
         else:
-            return linklist[linkindex]
+            return linklist[linkindex] 
     
 
-def howManyOptions():
+def howManyOptionsToDisplay() -> int:                 #good. gets user input for how many search results to display
     while True:
         try:
             numresults = int(input("how many results? (max 30) "))
@@ -40,30 +39,18 @@ def howManyOptions():
             return numresults
 
 
-def shortenlink(link):
-    linklist = []
-    for char in link:
-        if char == "&":
-            finallink = "".join(linklist)
-            return finallink
-        linklist.append(char)
-
-
-def getData(numresults, movielink):
-    iteration = 0
-    global data
+def getData(numresults: int, movielink: str) -> list[list]:               #TODO: ***OPTIMIZE***, test to make sure nothing broke
     data = [[]]
     response = requests.get(movielink)
     soup = BeautifulSoup(response.text, "html.parser")
     rows = soup.select("table#searchResult tr")
-
+    iteration = 0
     for row in rows:
 
         for a in row.find_all("a", href=True):
 
             if (a["href"]).startswith("magnet"):
-                ogmagnetlink = (a["href"])
-                magnetlink = shortenlink(ogmagnetlink)
+                magnetlink = (a["href"])[:60]
                 linkfound = True
                 break
             else:
@@ -90,15 +77,15 @@ def getData(numresults, movielink):
 
             data[iteration].append(magnetlink)
             
+            data.append([])                         #make sure theres room in the array to append to
             iteration += 1
             if iteration == numresults:             #stop once enough links have been collected
+                data.pop(len(data)-1)               #removes empty list at end of data 
                 return data
-            data.append([])                         #make sure theres room in the array to append to
     
-    data.pop(len(data)-1)                           #removes empty list at end of data 
-    return data
 
-def printData():
+
+def printData(data: list[list]) -> None:                #good. prints search results
     iteration = 1
     for list in data:
         print(f"{iteration}: ")
@@ -109,27 +96,37 @@ def printData():
         print("\n")
         iteration += 1
 
-def getMagnetLink():
+def getMovieInfo(data: list[list]) -> int | str:             #good. gets user input for which movie to select
     while True:
         try:
-            whichlink = (input("which to download? ('none' to skip) "))
-            if whichlink == "none":
+            selectedlinkindex = (input("which to download? ('none' to skip) "))
+            if selectedlinkindex == "none":
                 return "none"
             else:
-                whichlink = int(whichlink)
+                selectedlinkindex = int(selectedlinkindex)
         except ValueError:
             print("must be a number")
             continue
-        if whichlink>len(data) or whichlink<1:
+        if selectedlinkindex>len(data) or selectedlinkindex<1:
             print("invalid")
         else:
-            return whichlink
+            return selectedlinkindex
         
 
-def inputHandler():
-    while True:
-        response = input("return to search for another movie, 'exit' to finalize and print out list")
-        if response == "":
-            return "again"
-        elif response =="exit":
-            return "exit"
+def saveFinalData(moviedata: list[list], movielinks: list, savelocation: str) -> None:         #good
+    with open(savelocation, "a") as file:
+            iteration=1
+            for movie in moviedata:
+                file.write(f"{iteration}: {movie[0]}, {movie[1]}, {movie[2]}\n")
+                iteration+=1
+            for link in movielinks:
+                file.write(f"{link}\n")
+            file.close()
+
+def printFinalData(moviedata: list[list], movielinks: list) -> None:                     #good
+        iteration=1
+        for movie in moviedata:
+            print(f"{iteration}: {movie[0]}, {movie[1]}, {movie[2]}")
+            iteration+=1
+        for link in movielinks:
+            print(link)
